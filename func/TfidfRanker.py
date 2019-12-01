@@ -1,4 +1,6 @@
 import operator
+
+from config import CONFIGURATION
 from func.bk_ranker import Ranker
 import numpy as np
 import joblib
@@ -56,7 +58,7 @@ class TfIdfRanker(Ranker):
             for i in range(len(flag)):
                 if flag[i]:
                     batch = None
-                    with open('doc_vec_' + str(i) + '.bin', 'rb') as f:
+                    with open(CONFIGURATION['path_data'] + '/doc_vec_' + str(i) + '.bin', 'rb') as f:
                         batch = joblib.load(f)
                     st = i * bs
                     for doc_id in doc_set:
@@ -65,7 +67,7 @@ class TfIdfRanker(Ranker):
                             documents[doc_id] = Ranker.cosine_similarity(batch[ind - st], query_vec)
                     del batch
         for doc_id, score in sorted(documents.items(), key=operator.itemgetter(1), reverse=True):
-            doc = parser.docs[parser.index[doc_id]]
+            doc = parser.docs[parser.index[doc_id]].copy()
             doc['score'] = score
             doc['title'] = doc['title'][0]
             doc['body'] = doc['body'][0]

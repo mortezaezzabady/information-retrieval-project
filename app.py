@@ -76,11 +76,11 @@ def main():  # TODO: verbose
 
 @app.route('/api/v1/search', methods=['GET'])
 def search():
-    if 'query' in request.args:
+    if 'query' in request.args and len(request.args['query']) > 0:
         queries = [request.args['query']]
         suggestion = ''
         active = False
-        if 'force' not in request.args or not request.args['force']:
+        if 'force' not in request.args or request.args['force'] == 0:
             queries, suggestion, active = query_checker.check(request.args['query'], indexer)
         results = []
         correction = None
@@ -97,6 +97,21 @@ def search():
                 'documents': results,
                 'correction': correction,
             }
+        }))
+    else:
+        resp = Response(json.dumps({
+            'success': False,
+            'error': 'BAD_REQUEST'
+        }))
+    return resp
+
+
+@app.route('/api/v1/suggestion', methods=['GET'])
+def suggest():
+    if 'query' in request.args and len(request.args['query']) > 0:
+        resp = Response(json.dumps({
+            'success': True,
+            'suggestions': query_checker.suggest(request.args['query'])
         }))
     else:
         resp = Response(json.dumps({

@@ -24,7 +24,7 @@ class Bm25Ranker(Ranker):
                 doc_size = doc['title'][1] + doc['body'][1]
                 documents[doc_id] += idf * ((tf * (k1 + 1)) / (tf + k1 * (1 - b + b * (doc_size / avdl)))) * weight
         for doc_id, score in sorted(documents.items(), key=operator.itemgetter(1), reverse=True):
-            doc = parser.docs[parser.index[doc_id]]
+            doc = parser.docs[parser.index[doc_id]].copy()
             doc['score'] = score
             doc['title'] = doc['title'][0]
             doc['body'] = doc['body'][0]

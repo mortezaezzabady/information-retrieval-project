@@ -1,3 +1,5 @@
+from flask import request
+
 from config import CONFIGURATION
 from time import time
 import itertools
@@ -61,7 +63,39 @@ class QueryChecker(object):
                 suggestion = correction[0]
         elif len(indexer.get_docs_for_query(correction[0])) > CONFIGURATION['docs_count_lim']:
             search_query = [correction[0]]
+            suggestion = correction[0]
             active = True
         else:
             search_query = [query, correction[0]]
         return search_query, suggestion, active
+
+    def suggest(self, query):
+        tokens = Indexer.clean(query)
+        # token = tokens[-1]
+        # e1 = SpellChecker.edits1(token)
+        # e2 = SpellChecker.edits2(token)
+        # s = (e1[0] | e1[1] | e2 | {token}) & set(self.indexer.vocab)
+        # s = list(s)
+        # candidates = []
+        # for i in range(len(s)):
+        #     candidates.append((s[i], self.uni_lm.P([s[i]])))
+        # candidates = sorted(candidates, key=lambda k: k[1], reverse=True)
+        if len(tokens) == 0:
+            return []
+        lim = 3
+        if 'limit' in request.args:
+            lim = int(request.args['limit'])
+        candidates = []
+        token = tokens[-1]
+        for word in set(self.indexer.vocab):
+            if word != token and word.startswith(token):
+                seq = tokens.copy()
+                seq[-1] = word
+                candidates.append({'text': ' '.join(seq), 'score': self.bi_lm.P(seq[-2:], self.uni_lm)})
+        print(candidates)
+        c1 = self.bi_lm.ngram.get(token, {}).copy()
+        c1 = sorted(c1.items(), key=lambda kv: kv[1], reverse=True)[:3]
+        for word in c1:
+            candidates.append({'text': token + ' ' + word[0], 'score': self.bi_lm.P([token, word[0]], self.uni_lm)})
+        candidates = sorted(candidates, key=lambda k: k['score'], reverse=True)
+        return candidates[:lim]
