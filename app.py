@@ -127,6 +127,14 @@ def hello_world():
     return 'Hello World!'
 
 
+@app.after_request
+def apply_caching(response):
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, x-access-token'
+    return response
+
+
 if __name__ == '__main__':
     main()
-    app.run()
+    app.run('0.0.0.0', '5000')
