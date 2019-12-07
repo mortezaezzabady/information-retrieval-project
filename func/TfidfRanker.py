@@ -30,7 +30,6 @@ class TfIdfRanker(Ranker):
             return []
 
         documents = {}
-        result = []
         if dis_func == 'm':
             for token in tokens:
                 relevant_docs = index.get_docs_for_token(token)
@@ -66,14 +65,7 @@ class TfIdfRanker(Ranker):
                         if min(ind // bs, batch_count - 1) == i:
                             documents[doc_id] = Ranker.cosine_similarity(batch[ind - st], query_vec)
                     del batch
-        for doc_id, score in sorted(documents.items(), key=operator.itemgetter(1), reverse=True):
-            doc = parser.docs[parser.index[doc_id]].copy()
-            doc['score'] = score
-            doc['title'] = doc['title'][0]
-            doc['body'] = doc['body'][0]
-            result.append(doc)
-        print(len(result))
-        return result
+        return sorted(documents.items(), key=operator.itemgetter(1), reverse=True)
 
     @staticmethod
     def vectorization_docs(index, parser, batch_count, tf_type='r'):

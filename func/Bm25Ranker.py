@@ -11,7 +11,6 @@ class Bm25Ranker(Ranker):
         b = CONFIGURATION['hyper_parameters']['b']
         avdl = parser.avdl
         documents = {}
-        result = []
         for token in tokens:
             relevant_docs = index.get_docs_for_token(token)
             for doc_id, freq in relevant_docs:
@@ -23,11 +22,4 @@ class Bm25Ranker(Ranker):
                 weight = index.inverted_index[token]['posting'][doc_id]['weight']
                 doc_size = doc['title'][1] + doc['body'][1]
                 documents[doc_id] += idf * ((tf * (k1 + 1)) / (tf + k1 * (1 - b + b * (doc_size / avdl)))) * weight
-        for doc_id, score in sorted(documents.items(), key=operator.itemgetter(1), reverse=True):
-            doc = parser.docs[parser.index[doc_id]].copy()
-            doc['score'] = score
-            doc['title'] = doc['title'][0]
-            doc['body'] = doc['body'][0]
-            result.append(doc)
-        print(len(result))
-        return result
+        return sorted(documents.items(), key=operator.itemgetter(1), reverse=True)
